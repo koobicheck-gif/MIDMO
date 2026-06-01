@@ -1,0 +1,76 @@
+name: Deploy UI to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static export
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Remove API routes (not compatible with static export)
+        run: rm -rf app/api
+
+      - name: Build static export
+        env:
+          NEXT_PUBLIC_STATIC_EXPORT: 'true'
+          NEXTAUTH_SECRET: 'static-export-placeholder'
+          NEXTAUTH_URL: 'https://koobicheck-gif.github.io/MIDMO'
+          DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/placeholder'
+          STRIPE_SECRET_KEY: 'sk_test_placeholder'
+          STRIPE_WEBHOOK_SECRET: 'whsec_placeholder'
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_placeholder'
+          TWILIO_ACCOUNT_SID: 'AC_placeholder'
+          TWILIO_AUTH_TOKEN: 'placeholder'
+          TWILIO_PHONE_NUMBER: '+15735550100'
+          RESEND_API_KEY: 're_placeholder'
+          CLOUDINARY_CLOUD_NAME: 'placeholder'
+          CLOUDINARY_API_KEY: 'placeholder'
+          CLOUDINARY_API_SECRET: 'placeholder'
+        run: npx next build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

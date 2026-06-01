@@ -1,15 +1,13 @@
-export const dynamic = 'force-dynamic'
-
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { Settings, Users, Link2, Bell } from 'lucide-react'
+import { Settings, Link2 } from 'lucide-react'
 
 export default async function SettingsPage() {
-  const session = await getServerSession(authOptions)
-
-  if ((session?.user as any)?.role !== 'OWNER') {
-    redirect('/')
+  // In static export mode skip auth check; in live app this is protected by middleware
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_STATIC_EXPORT !== 'true') {
+    const { getServerSession } = await import('next-auth')
+    const { authOptions } = await import('@/lib/auth')
+    const { redirect } = await import('next/navigation')
+    const session = await getServerSession(authOptions)
+    if ((session?.user as any)?.role !== 'OWNER') redirect('/')
   }
 
   return (
@@ -19,7 +17,6 @@ export default async function SettingsPage() {
         <p className="text-xs text-mint-muted">Company configuration — owner only</p>
       </div>
 
-      {/* Company Info */}
       <div className="glass-card p-5">
         <h3 className="text-sm font-semibold text-mint mb-4 flex items-center gap-2">
           <Settings className="w-4 h-4 text-green-400" />
@@ -34,22 +31,15 @@ export default async function SettingsPage() {
           ].map(field => (
             <div key={field.label}>
               <label className="block text-xs font-medium text-mint-muted mb-1">{field.label}</label>
-              <input
-                defaultValue={field.value}
-                className="w-full px-3 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-mint focus:outline-none focus:border-green-500/50"
-              />
+              <input defaultValue={field.value} className="w-full px-3 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-mint focus:outline-none focus:border-green-500/50" />
             </div>
           ))}
-          <button
-            className="px-4 py-2 rounded-xl text-xs font-semibold"
-            style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', color: '#dcfce7' }}
-          >
+          <button className="px-4 py-2 rounded-xl text-xs font-semibold" style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', color: '#dcfce7' }}>
             Save Changes
           </button>
         </div>
       </div>
 
-      {/* Pricing */}
       <div className="glass-card p-5">
         <h3 className="text-sm font-semibold text-mint mb-4">Dumpster Pricing</h3>
         <div className="space-y-2">
@@ -75,25 +65,16 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      {/* Integrations */}
       <div className="glass-card p-5">
         <h3 className="text-sm font-semibold text-mint mb-4 flex items-center gap-2">
           <Link2 className="w-4 h-4 text-green-400" />
           Integrations
         </h3>
         <div className="space-y-3">
-          {[
-            { name: 'Stripe', env: 'STRIPE_SECRET_KEY', status: 'Configure in .env.local' },
-            { name: 'Twilio SMS', env: 'TWILIO_ACCOUNT_SID', status: 'Configure in .env.local' },
-            { name: 'Resend Email', env: 'RESEND_API_KEY', status: 'Configure in .env.local' },
-            { name: 'Cloudinary', env: 'CLOUDINARY_URL', status: 'Configure in .env.local' },
-          ].map(integration => (
-            <div key={integration.name} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <div>
-                <div className="text-xs font-medium text-mint">{integration.name}</div>
-                <div className="text-[10px] text-mint-muted font-mono">{integration.env}</div>
-              </div>
-              <span className="text-[10px] px-2.5 py-1 rounded-full pill-due">{integration.status}</span>
+          {['Stripe', 'Twilio SMS', 'Resend Email', 'Cloudinary'].map(name => (
+            <div key={name} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <div className="text-xs font-medium text-mint">{name}</div>
+              <span className="text-[10px] px-2.5 py-1 rounded-full pill-due">Configure in .env</span>
             </div>
           ))}
         </div>
