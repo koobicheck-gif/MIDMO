@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 142 76% 6%;
+    --foreground: 142 60% 92%;
+
+    --card: 142 60% 8%;
+    --card-foreground: 142 60% 92%;
+
+    --popover: 142 60% 6%;
+    --popover-foreground: 142 60% 92%;
+
+    --primary: 142 71% 45%;
+    --primary-foreground: 142 76% 6%;
+
+    --secondary: 142 30% 15%;
+    --secondary-foreground: 142 60% 85%;
+
+    --muted: 142 30% 12%;
+    --muted-foreground: 142 20% 55%;
+
+    --accent: 142 30% 18%;
+    --accent-foreground: 142 60% 85%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 142 30% 20%;
+    --input: 142 30% 15%;
+    --ring: 142 71% 45%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    background: linear-gradient(160deg, #052e16 0%, #14532d 45%, #15803d 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+  }
+
+  .glass-card-strong {
+    background: rgba(255, 255, 255, 0.10);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+  }
+
+  .brand-gradient {
+    background: linear-gradient(160deg, #052e16 0%, #14532d 45%, #15803d 100%);
+  }
+
+  .text-mint {
+    color: rgba(187, 247, 208, 0.85);
+  }
+
+  .text-mint-muted {
+    color: rgba(187, 247, 208, 0.55);
+  }
+
+  .pill-active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .pill-due {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .pill-overdue {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .pill-scheduled {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  .pill-maintenance {
+    background: rgba(124, 58, 237, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200;
+    color: rgba(187, 247, 208, 0.65);
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(187, 247, 208, 0.9);
+  }
+
+  .nav-link.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #4ade80;
+    border-left: 2px solid #4ade80;
+  }
+}
+
+/* Leaflet map dark theme overrides */
+.leaflet-container {
+  background: #1a1a2e !important;
+  border-radius: 12px;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(5, 46, 22, 0.97) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 16px !important;
+  color: rgba(187, 247, 208, 0.9) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(5, 46, 22, 0.97) !important;
+}
+
+.leaflet-popup-close-button {
+  color: rgba(187, 247, 208, 0.7) !important;
+  font-size: 18px !important;
+  top: 8px !important;
+  right: 8px !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.5);
+}
+
+/* Safe area for mobile nav */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile touch scroll */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}

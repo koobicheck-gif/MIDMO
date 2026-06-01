@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  DRIVER
+  OFFICE
+}
+
+enum CustomerType {
+  RESIDENTIAL
+  COMMERCIAL
+  CONTRACTOR
+}
+
+enum PaymentMethod {
+  STRIPE
+  VENMO
+  CASH
+  CHECK
+  MONEY_ORDER
+  ZELLE
+  ACH
+  NET_30
+  OTHER
+  CREDIT_CARD
+}
+
+enum DumpsterStatus {
+  IN_YARD
+  ACTIVE
+  PICKUP_DUE
+  OVERDUE
+  SCHEDULED
+  MAINTENANCE
+}
+
+enum JobType {
+  DELIVERY
+  PICKUP
+  SWAP
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  OVERDUE
+  PARTIAL
+  VOID
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  hashedPassword String?
+  role           Role            @default(DRIVER)
+  phone          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  jobs           Job[]
+  dispatchRoutes DispatchRoute[]
+}
+
+model Customer {
+  id            String        @id @default(cuid())
+  name          String
+  phone         String
+  email         String?
+  address       String
+  city          String        @default("Columbia")
+  state         String        @default("MO")
+  zip           String        @default("65201")
+  type          CustomerType  @default(RESIDENTIAL)
+  paymentPref   PaymentMethod @default(CREDIT_CARD)
+  notes         String?
+  stripeId      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  jobs          Job[]
+  invoices      Invoice[]
+  payments      Payment[]
+
+  @@index([name])
+  @@index([email])
+}
+
+model Dumpster {
+  id        String         @id @default(cuid())
+  unitId    String         @unique
+  sizeYd    Int
+  status    DumpsterStatus @default(IN_YARD)
+  lat       Float?
+  lng       Float?
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  jobs      Job[]
+
+  @@index([status])
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  type        JobType
+  status      JobStatus @default(SCHEDULED)
+  address     String
+  lat         Float?
+  lng         Float?
+  daysOnSite  Int       @default(0)
+  rentalDays  Int       @default(7)
+  scheduledAt DateTime
+  completedAt DateTime?
+  notes       String?
+  gateCode    String?
+  customerId  String
+  dumpsterId  String?
+  driverId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer Customer  @relation(fields: [customerId], references: [id])
+  dumpster Dumpster? @relation(fields: [dumpsterId], references: [id])
+  driver   User?     @relation(fields: [driverId], references: [id])
+  invoice  Invoice?
+
+  @@index([customerId])
+  @@index([driverId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customerId    String
+  jobId         String?       @unique
+  baseRate      Float         @default(275)
+  extraDays     Int           @default(0)
+  dayRate       Float         @default(45)
+  lateFee       Float         @default(0)
+  fuelSurcharge Float         @default(0)
+  taxRate       Float         @default(0)
+  total         Float
+  status        InvoiceStatus @default(PENDING)
+  dueDate       DateTime
+  paidAt        DateTime?
+  paymentMethod PaymentMethod?
+  stripeId      String?
+  notes         String?
+  lineItems     Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  customer Customer  @relation(fields: [customerId], references: [id])
+  job      Job?      @relation(fields: [jobId], references: [id])
+  payments Payment[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  invoiceId  String
+  customerId String
+  amount     Float
+  method     PaymentMethod
+  reference  String?
+  receivedBy String?
+  notes      String?
+  paidAt     DateTime      @default(now())
+  createdAt  DateTime      @default(now())
+
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([invoiceId])
+  @@index([customerId])
+}
+
+model DispatchRoute {
+  id            String   @id @default(cuid())
+  driverId      String
+  date          DateTime
+  orderedJobIds Json     @default("[]")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  driver User @relation(fields: [driverId], references: [id])
+
+  @@index([driverId])
+  @@index([date])
+}
