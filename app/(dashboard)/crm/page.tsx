@@ -4,12 +4,16 @@ import { useState } from 'react'
 import { useCustomers, useUpdateCustomer } from '@/hooks/useCustomers'
 import { useNewJobModal } from '@/store/useNewJobModal'
 import { cn, formatPhone } from '@/lib/utils'
-import { Search, Plus, X, Phone, Mail, MapPin, Calendar, DollarSign } from 'lucide-react'
+import { Search, Plus, X, Phone, Mail, MapPin } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const NewCustomerModal = dynamic(() => import('@/components/modals/NewCustomerModal'), { ssr: false })
 
 export default function CRMPage() {
   const { data: customers = [], isLoading } = useCustomers()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<any>(null)
+  const [showNewCustomer, setShowNewCustomer] = useState(false)
   const openModal = useNewJobModal(s => s.open)
 
   const filtered = customers.filter((c: any) =>
@@ -27,12 +31,14 @@ export default function CRMPage() {
 
   return (
     <div className="space-y-4 py-4">
+      {showNewCustomer && <NewCustomerModal onClose={() => setShowNewCustomer(false)} />}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-mint">CRM</h1>
           <p className="text-xs text-mint-muted">{customers.length} customers</p>
         </div>
         <button
+          onClick={() => setShowNewCustomer(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
           style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', color: '#dcfce7', boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
         >

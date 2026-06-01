@@ -6,10 +6,14 @@ import { format, addDays } from 'date-fns'
 import { formatCurrency } from '@/lib/utils'
 import { Plus, Minus } from 'lucide-react'
 import { toast } from 'sonner'
+import { MOCK_CUSTOMERS, IS_STATIC } from '@/lib/mock-data'
 
 export default function CreateInvoiceTab() {
   const queryClient = useQueryClient()
-  const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: () => fetch('/api/customers').then(r => r.json()) })
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => IS_STATIC ? Promise.resolve(MOCK_CUSTOMERS) : fetch('/api/customers').then(r => r.json()),
+  })
   const [form, setForm] = useState({
     customerId: '',
     baseRate: 275,
@@ -30,13 +34,18 @@ export default function CreateInvoiceTab() {
     if (!form.customerId) return
     setIsSaving(true)
     try {
-      const res = await fetch('/api/invoices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, dueDate: new Date(form.dueDate).toISOString() }),
-      })
-      if (!res.ok) throw new Error('Failed')
-      const inv = await res.json()
+      let inv: any
+      if (IS_STATIC) {
+        inv = { invoiceNumber: `INV-${Math.floor(Math.random() * 1000 + 2250)}` }
+      } else {
+        const res = await fetch('/api/invoices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, dueDate: new Date(form.dueDate).toISOString() }),
+        })
+        if (!res.ok) throw new Error('Failed')
+        inv = await res.json()
+      }
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       toast.success(`Invoice ${inv.invoiceNumber} created!`)
     } catch {

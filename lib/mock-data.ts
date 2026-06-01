@@ -89,3 +89,35 @@ export const MOCK_REVENUE_BY_MONTH = Array.from({ length: 6 }, (_, i) => ({
   month: format(subMonths(new Date('2026-06-01'), 5 - i), 'MMM'),
   revenue: [1840, 2340, 1975, 3120, 2680, 1750][i],
 }))
+
+export const MOCK_REPORTS = {
+  monthlyRevenue: Array.from({ length: 6 }, (_, i) => ({
+    month: format(subMonths(new Date('2026-06-01'), 5 - i), 'MMM yyyy'),
+    revenue: [1840, 2340, 1975, 3120, 2680, 1750][i],
+  })),
+  methodBreakdown: [
+    { method: 'STRIPE', amount: 275 },
+    { method: 'CHECK', amount: 975 },
+    { method: 'CASH', amount: 350 },
+    { method: 'VENMO', amount: 100 },
+    { method: 'ZELLE', amount: 50 },
+    { method: 'ACH', amount: 325 },
+  ],
+  invoiceAging: { current: 725, days30: 415, days60: 715, over60: 0 },
+  jobsByType: [
+    { type: 'DELIVERY', count: 6 },
+    { type: 'PICKUP', count: 1 },
+    { type: 'SWAP', count: 1 },
+  ],
+  fleetUtilization: [
+    { status: 'ACTIVE', count: 6 },
+    { status: 'PICKUP_DUE', count: 2 },
+    { status: 'OVERDUE', count: 1 },
+    { status: 'SCHEDULED', count: 1 },
+    { status: 'IN_YARD', count: 1 },
+    { status: 'MAINTENANCE', count: 1 },
+  ],
+  totals: { revenue: 2075, invoiced: 3320, jobsCompleted: 5 },
+}
+
+export const IS_STATIC = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true'

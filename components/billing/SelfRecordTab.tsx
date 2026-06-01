@@ -6,11 +6,13 @@ import { format } from 'date-fns'
 import { formatCurrency, cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { MOCK_CUSTOMERS, MOCK_INVOICES, MOCK_PAYMENTS, IS_STATIC } from '@/lib/mock-data'
 
 const METHODS = ['CASH', 'CHECK', 'ZELLE', 'MONEY_ORDER', 'ACH', 'OTHER']
 const METHOD_ICONS: Record<string, string> = { CASH: '💵', CHECK: '📝', ZELLE: '🟡', MONEY_ORDER: '📮', ACH: '🏦', OTHER: '💰' }
 
 async function fetchData() {
+  if (IS_STATIC) return { customers: MOCK_CUSTOMERS, invoices: MOCK_INVOICES, payments: MOCK_PAYMENTS }
   const [customers, invoices, payments] = await Promise.all([
     fetch('/api/customers').then(r => r.json()),
     fetch('/api/invoices').then(r => r.json()),

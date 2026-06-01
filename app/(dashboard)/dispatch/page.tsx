@@ -7,19 +7,19 @@ import { ChevronLeft, ChevronRight, Calendar, CheckCircle } from 'lucide-react'
 import { StatusPill } from '@/components/ui/StatusPill'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { MOCK_USERS, MOCK_JOBS, IS_STATIC } from '@/lib/mock-data'
 import {
   DndContext,
   DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
+  useDroppable,
 } from '@dnd-kit/core'
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
-  arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -62,6 +62,55 @@ function SortableJobCard({ job, onComplete }: { job: any; onComplete: (id: strin
   )
 }
 
+function DriverColumn({ driver, jobs, onComplete }: { driver: any; jobs: any[]; onComplete: (id: string) => void }) {
+  const { setNodeRef, isOver } = useDroppable({ id: driver.id })
+  const completed = jobs.filter(j => j.status === 'COMPLETED').length
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn('glass-card p-4 transition-colors', isOver && 'border-green-500/40 bg-green-500/5')}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-sm font-semibold text-mint">{driver.name}</div>
+          <div className="text-xs text-mint-muted">{completed}/{jobs.length} jobs done</div>
+        </div>
+        <div className="text-xs font-mono text-green-400">
+          {jobs.length > 0 ? Math.round(completed / jobs.length * 100) : 0}%
+        </div>
+      </div>
+      <div className="h-1.5 bg-white/10 rounded-full mb-4 overflow-hidden">
+        <div
+          className="h-full bg-green-500 rounded-full transition-all"
+          style={{ width: `${jobs.length > 0 ? (completed / jobs.length * 100) : 0}%` }}
+        />
+      </div>
+      <SortableContext items={jobs.map(j => j.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2 min-h-[60px]">
+          {jobs.map(job => (
+            <SortableJobCard key={job.id} job={job} onComplete={onComplete} />
+          ))}
+          {jobs.length === 0 && (
+            <div className="text-center py-6 text-xs text-mint-muted border border-dashed border-white/10 rounded-xl">
+              Drop jobs here
+            </div>
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  )
+}
+
+async function fetchDispatch(dateStr: string) {
+  if (IS_STATIC) {
+    const drivers = MOCK_USERS.filter(u => u.role === 'DRIVER')
+    const jobs = MOCK_JOBS.map(j => ({ ...j, driverId: j.driver?.id ?? null }))
+    return { drivers, jobs, routes: [] }
+  }
+  return fetch(`/api/dispatch?date=${dateStr}`).then(r => r.json())
+}
+
 export default function DispatchPage() {
   const [date, setDate] = useState(new Date())
   const queryClient = useQueryClient()
@@ -70,24 +119,43 @@ export default function DispatchPage() {
   const dateStr = format(date, 'yyyy-MM-dd')
   const { data, isLoading } = useQuery({
     queryKey: ['dispatch', dateStr],
-    queryFn: () => fetch(`/api/dispatch?date=${dateStr}`).then(r => r.json()),
+    queryFn: () => fetchDispatch(dateStr),
   })
 
   const completeMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) =>
-      fetch(`/api/jobs/${id}`, {
+    mutationFn: ({ id }: { id: string }) => {
+      if (IS_STATIC) return Promise.resolve({ id, status: 'COMPLETED' })
+      return fetch(`/api/jobs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'COMPLETED', completedAt: new Date().toISOString() }),
-      }).then(r => r.json()),
+      }).then(r => r.json())
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dispatch', dateStr] })
       toast.success('Job marked complete')
     },
   })
 
+  const assignMutation = useMutation({
+    mutationFn: ({ jobId, driverId }: { jobId: string; driverId: string }) => {
+      if (IS_STATIC) return Promise.resolve({ id: jobId, driverId })
+      return fetch(`/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driverId }),
+      }).then(r => r.json())
+    },
+    onSuccess: (_, { driverId }) => {
+      const driverName = drivers.find((d: any) => d.id === driverId)?.name ?? 'driver'
+      queryClient.invalidateQueries({ queryKey: ['dispatch', dateStr] })
+      toast.success(`Job reassigned to ${driverName}`)
+    },
+    onError: () => toast.error('Failed to reassign job'),
+  })
+
   const drivers = data?.drivers?.filter((d: any) => d.role === 'DRIVER') ?? []
-  const jobs = data?.jobs ?? []
+  const jobs: any[] = data?.jobs ?? []
 
   const jobsByDriver: Record<string, any[]> = {}
   drivers.forEach((d: any) => {
@@ -98,7 +166,23 @@ export default function DispatchPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    toast.success('Route reordered')
+
+    const activeJobId = active.id as string
+
+    // Find source driver
+    const sourceDriverId = Object.entries(jobsByDriver).find(([, dJobs]) =>
+      dJobs.some(j => j.id === activeJobId)
+    )?.[0]
+
+    // Determine target driver — either dropped on driver column or on another job
+    const isDriverTarget = drivers.some((d: any) => d.id === over.id)
+    const targetDriverId = isDriverTarget
+      ? (over.id as string)
+      : Object.entries(jobsByDriver).find(([, dJobs]) => dJobs.some(j => j.id === over.id))?.[0]
+
+    if (targetDriverId && targetDriverId !== sourceDriverId) {
+      assignMutation.mutate({ jobId: activeJobId, driverId: targetDriverId })
+    }
   }
 
   return (
@@ -129,42 +213,15 @@ export default function DispatchPage() {
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {drivers.map((driver: any) => {
-              const driverJobs = jobsByDriver[driver.id] ?? []
-              const completed = driverJobs.filter((j: any) => j.status === 'COMPLETED').length
-              return (
-                <div key={driver.id} className="glass-card p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm font-semibold text-mint">{driver.name}</div>
-                      <div className="text-xs text-mint-muted">{completed}/{driverJobs.length} jobs done</div>
-                    </div>
-                    <div className="text-xs font-mono text-green-400">{driverJobs.length > 0 ? Math.round(completed / driverJobs.length * 100) : 0}%</div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 bg-white/10 rounded-full mb-4 overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full transition-all"
-                      style={{ width: `${driverJobs.length > 0 ? (completed / driverJobs.length * 100) : 0}%` }}
-                    />
-                  </div>
-                  <SortableContext items={driverJobs.map((j: any) => j.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {driverJobs.map((job: any) => (
-                        <SortableJobCard key={job.id} job={job} onComplete={id => completeMutation.mutate({ id })} />
-                      ))}
-                      {driverJobs.length === 0 && (
-                        <div className="text-center py-6 text-xs text-mint-muted border border-dashed border-white/10 rounded-xl">
-                          No jobs assigned
-                        </div>
-                      )}
-                    </div>
-                  </SortableContext>
-                </div>
-              )
-            })}
+            {drivers.map((driver: any) => (
+              <DriverColumn
+                key={driver.id}
+                driver={driver}
+                jobs={jobsByDriver[driver.id] ?? []}
+                onComplete={id => completeMutation.mutate({ id })}
+              />
+            ))}
 
-            {/* Unassigned */}
             {unassigned.length > 0 && (
               <div className="glass-card p-4">
                 <div className="text-sm font-semibold text-amber-400 mb-3">Unassigned ({unassigned.length})</div>

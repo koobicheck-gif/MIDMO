@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatCurrency } from '@/lib/utils'
 import { CreditCard, ExternalLink } from 'lucide-react'
+import { MOCK_INVOICES, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchInvoices() {
+  if (IS_STATIC) return MOCK_INVOICES.filter((i: any) => i.status === 'PENDING')
   const res = await fetch('/api/invoices?status=PENDING')
   if (!res.ok) throw new Error('Failed')
   return res.json()

@@ -1,8 +1,10 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { MOCK_DUMPSTERS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchDumpsters(params?: Record<string, string>) {
+  if (IS_STATIC) return MOCK_DUMPSTERS
   const query = params ? '?' + new URLSearchParams(params).toString() : ''
   const res = await fetch(`/api/dumpsters${query}`)
   if (!res.ok) throw new Error('Failed to fetch dumpsters')
@@ -14,7 +16,7 @@ export function useDumpsters(params?: Record<string, string>) {
     queryKey: ['dumpsters', params],
     queryFn: () => fetchDumpsters(params),
     staleTime: 1000 * 60 * 5,
-    refetchInterval: 1000 * 60 * 5,
+    refetchInterval: IS_STATIC ? false : 1000 * 60 * 5,
   })
 }
 
@@ -22,6 +24,7 @@ export function useUpdateDumpster() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      if (IS_STATIC) return { id, ...data }
       const res = await fetch(`/api/dumpsters/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

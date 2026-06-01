@@ -5,8 +5,10 @@ import { useQuery } from '@tanstack/react-query'
 import { formatCurrency, cn } from '@/lib/utils'
 import { Send } from 'lucide-react'
 import { toast } from 'sonner'
+import { MOCK_CUSTOMERS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchCustomers() {
+  if (IS_STATIC) return MOCK_CUSTOMERS
   const res = await fetch('/api/customers')
   if (!res.ok) throw new Error('Failed')
   return res.json()
@@ -25,17 +27,13 @@ export default function VenmoTab() {
     if (!customerId || !amount) return
     setIsSending(true)
     try {
-      const res = await fetch('/api/venmo/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount,
-          note,
-          phone: selectedCustomer?.phone,
-          customerName: selectedCustomer?.name,
-        }),
-      })
-      const data = await res.json()
+      if (!IS_STATIC) {
+        await fetch('/api/venmo/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount, note, phone: selectedCustomer?.phone, customerName: selectedCustomer?.name }),
+        })
+      }
       toast.success('Venmo request sent!', { description: `SMS sent to ${selectedCustomer?.name}` })
     } catch {
       toast.error('Failed to send Venmo request')

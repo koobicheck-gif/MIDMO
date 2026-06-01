@@ -6,6 +6,7 @@ import { format, subDays, subMonths, startOfMonth } from 'date-fns'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
 import { BarChart3, TrendingUp } from 'lucide-react'
+import { MOCK_REPORTS, IS_STATIC } from '@/lib/mock-data'
 
 const DATE_PRESETS = [
   { label: '7 days', from: () => subDays(new Date(), 7) },
@@ -26,6 +27,7 @@ const tooltipStyle = {
 }
 
 async function fetchReports(from: Date, to: Date) {
+  if (IS_STATIC) return MOCK_REPORTS
   const res = await fetch(`/api/reports?from=${from.toISOString()}&to=${to.toISOString()}`)
   if (!res.ok) throw new Error('Failed')
   return res.json()

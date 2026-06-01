@@ -1,8 +1,10 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { MOCK_JOBS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchJobs(params?: Record<string, string>) {
+  if (IS_STATIC) return MOCK_JOBS
   const query = params ? '?' + new URLSearchParams(params).toString() : ''
   const res = await fetch(`/api/jobs${query}`)
   if (!res.ok) throw new Error('Failed to fetch jobs')
@@ -21,6 +23,7 @@ export function useCreateJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: any) => {
+      if (IS_STATIC) return { ...data, id: `j-${Date.now()}` }
       const res = await fetch('/api/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,6 +43,7 @@ export function useUpdateJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      if (IS_STATIC) return { id, ...data }
       const res = await fetch(`/api/jobs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

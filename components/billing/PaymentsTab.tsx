@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { formatCurrency } from '@/lib/utils'
+import { MOCK_PAYMENTS, IS_STATIC } from '@/lib/mock-data'
 
 const METHOD_ICONS: Record<string, string> = {
   STRIPE: '💳',
@@ -16,6 +17,7 @@ const METHOD_ICONS: Record<string, string> = {
 }
 
 async function fetchPayments() {
+  if (IS_STATIC) return MOCK_PAYMENTS
   const res = await fetch('/api/payments')
   if (!res.ok) throw new Error('Failed')
   return res.json()
