@@ -28,11 +28,15 @@ export default function VenmoTab() {
     setIsSending(true)
     try {
       if (!IS_STATIC) {
-        await fetch('/api/venmo/request', {
+        const res = await fetch('/api/venmo/request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount, note, phone: selectedCustomer?.phone, customerName: selectedCustomer?.name }),
         })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.error ?? 'Failed to send SMS')
+        }
       }
       toast.success('Venmo request sent!', { description: `SMS sent to ${selectedCustomer?.name}` })
     } catch {

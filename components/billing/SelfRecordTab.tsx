@@ -14,9 +14,9 @@ const METHOD_ICONS: Record<string, string> = { CASH: '💵', CHECK: '📝', ZELL
 async function fetchData() {
   if (IS_STATIC) return { customers: MOCK_CUSTOMERS, invoices: MOCK_INVOICES, payments: MOCK_PAYMENTS }
   const [customers, invoices, payments] = await Promise.all([
-    fetch('/api/customers').then(r => r.json()),
-    fetch('/api/invoices').then(r => r.json()),
-    fetch('/api/payments').then(r => r.json()),
+    fetch('/api/customers').then(r => { if (!r.ok) throw new Error('Failed to load customers'); return r.json() }),
+    fetch('/api/invoices').then(r => { if (!r.ok) throw new Error('Failed to load invoices'); return r.json() }),
+    fetch('/api/payments').then(r => { if (!r.ok) throw new Error('Failed to load payments'); return r.json() }),
   ])
   return { customers, invoices, payments }
 }

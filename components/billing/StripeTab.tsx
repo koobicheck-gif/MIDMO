@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatCurrency } from '@/lib/utils'
 import { CreditCard, ExternalLink } from 'lucide-react'
+import { toast } from 'sonner'
 import { MOCK_INVOICES, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchInvoices() {
@@ -31,9 +32,10 @@ export default function StripeTab() {
         body: JSON.stringify({ invoiceId: selectedInvoiceId }),
       })
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create payment intent')
       setClientSecret(data.clientSecret)
-    } catch {
-      alert('Failed to create payment intent')
+    } catch (err: any) {
+      toast.error('Stripe error', { description: err.message })
     } finally {
       setIsProcessing(false)
     }

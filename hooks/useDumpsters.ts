@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { MOCK_DUMPSTERS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchDumpsters(params?: Record<string, string>) {
@@ -36,5 +37,6 @@ export function useUpdateDumpster() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dumpsters'] })
     },
+    onError: (err: Error) => toast.error('Failed to update dumpster', { description: err.message }),
   })
 }

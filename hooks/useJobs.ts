@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { MOCK_JOBS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchJobs(params?: Record<string, string>) {
@@ -36,6 +37,7 @@ export function useCreateJob() {
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       queryClient.invalidateQueries({ queryKey: ['dumpsters'] })
     },
+    onError: (err: Error) => toast.error('Failed to create job', { description: err.message }),
   })
 }
 
@@ -55,5 +57,6 @@ export function useUpdateJob() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
     },
+    onError: (err: Error) => toast.error('Failed to update job', { description: err.message }),
   })
 }

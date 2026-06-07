@@ -108,7 +108,7 @@ export default async function DashboardPage() {
               <Package className="w-4 h-4 text-green-400" />
               Active Dumpsters
             </h2>
-            <a href="/MIDMO/assets/" className="text-xs text-green-400 hover:text-green-300 transition-colors">Full Map →</a>
+            <a href="/assets" className="text-xs text-green-400 hover:text-green-300 transition-colors">Full Map →</a>
           </div>
           <div style={{ height: '260px' }}>
             <DashboardClientSection dumpsters={dumpsters as any} revenueByMonth={revenueByMonth} />

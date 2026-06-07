@@ -135,6 +135,7 @@ export default function DispatchPage() {
       queryClient.invalidateQueries({ queryKey: ['dispatch', dateStr] })
       toast.success('Job marked complete')
     },
+    onError: () => toast.error('Failed to mark job complete'),
   })
 
   const assignMutation = useMutation({

@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { MOCK_CUSTOMERS, IS_STATIC } from '@/lib/mock-data'
 
 async function fetchCustomers(params?: Record<string, string>) {
@@ -48,6 +49,7 @@ export function useCreateCustomer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
     },
+    onError: (err: Error) => toast.error('Failed to create customer', { description: err.message }),
   })
 }
 
@@ -68,5 +70,6 @@ export function useUpdateCustomer() {
       queryClient.invalidateQueries({ queryKey: ['customers', id] })
       queryClient.invalidateQueries({ queryKey: ['customers'] })
     },
+    onError: (err: Error) => toast.error('Failed to update customer', { description: err.message }),
   })
 }
