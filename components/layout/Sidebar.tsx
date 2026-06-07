@@ -13,9 +13,9 @@ import {
   BarChart3,
   Settings,
   Container,
-  Rocket,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { InfoButton } from './InfoSheet'
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -74,16 +74,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Owner-only links */}
+      {/* Settings (owner only) */}
       {role === 'OWNER' && (
-        <div className="px-3 py-3 border-t border-white/8 space-y-1">
-          <Link
-            href="/setup"
-            className={cn('nav-link', pathname.startsWith('/setup') && 'active')}
-          >
-            <Rocket className="w-5 h-5 flex-shrink-0" />
-            <span>Setup</span>
-          </Link>
+        <div className="px-3 py-3 border-t border-white/8">
           <Link
             href="/settings"
             className={cn('nav-link', pathname.startsWith('/settings') && 'active')}
@@ -94,10 +87,13 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* User info */}
-      <div className="px-4 py-3 border-t border-white/8">
-        <div className="text-xs text-mint-muted">{session?.user?.name}</div>
-        <div className="text-xs font-mono text-green-400/60">{role}</div>
+      {/* User info + info button */}
+      <div className="px-4 py-3 border-t border-white/8 flex items-center justify-between">
+        <div>
+          <div className="text-xs text-mint-muted">{session?.user?.name}</div>
+          <div className="text-xs font-mono text-green-400/60">{role}</div>
+        </div>
+        <InfoButton />
       </div>
     </aside>
   )

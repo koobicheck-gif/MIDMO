@@ -12,6 +12,7 @@ import {
   BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { InfoButton } from './InfoSheet'
 
 const navItems = [
   { label: 'Home', href: '/', icon: LayoutDashboard },
@@ -60,6 +61,11 @@ export default function MobileNav() {
             </Link>
           )
         })}
+
+        {/* Info button */}
+        <div className="flex flex-col items-center justify-center px-2 min-h-[56px]">
+          <InfoButton />
+        </div>
       </div>
     </nav>
   )
