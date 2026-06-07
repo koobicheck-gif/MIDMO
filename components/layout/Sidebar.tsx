@@ -13,6 +13,7 @@ import {
   BarChart3,
   Settings,
   Container,
+  Rocket,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -73,9 +74,16 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Settings (owner only) */}
+      {/* Owner-only links */}
       {role === 'OWNER' && (
-        <div className="px-3 py-3 border-t border-white/8">
+        <div className="px-3 py-3 border-t border-white/8 space-y-1">
+          <Link
+            href="/setup"
+            className={cn('nav-link', pathname.startsWith('/setup') && 'active')}
+          >
+            <Rocket className="w-5 h-5 flex-shrink-0" />
+            <span>Setup</span>
+          </Link>
           <Link
             href="/settings"
             className={cn('nav-link', pathname.startsWith('/settings') && 'active')}
