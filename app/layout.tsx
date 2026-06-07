@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import '@/lib/env' // validate env vars at server startup
 
 export const metadata: Metadata = {
   title: 'Mid Mo Roll Offs',

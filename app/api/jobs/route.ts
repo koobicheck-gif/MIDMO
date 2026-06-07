@@ -1,24 +1,28 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
+import { requireAuth, requireRole, validateBody, validateEnum, handleApiError, successResponse } from '@/lib/api-helpers'
 import { CreateJobSchema } from '@/lib/validations/job.schema'
 
+const JOB_STATUSES = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
+
 export async function GET(request: NextRequest) {
-  const { error } = await requireAuth()
-  if (error) return error
+  const { session, error } = await requireAuth(request)
+  if (error || !session) return error!
 
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const driverId = searchParams.get('driverId')
+    const status = validateEnum(searchParams.get('status'), JOB_STATUSES)
+    const role = (session.user as any).role as string
+    const userId = (session.user as any).id as string
     const from = searchParams.get('from')
     const to = searchParams.get('to')
-    const limit = parseInt(searchParams.get('limit') ?? '50')
+    const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 200)
 
     const jobs = await prisma.job.findMany({
       where: {
-        ...(status && { status: status as any }),
-        ...(driverId && { driverId }),
+        ...(status && { status }),
+        // Drivers only see their own assigned jobs
+        ...(role === 'DRIVER' && { driverId: userId }),
         ...(from && to && {
           scheduledAt: { gte: new Date(from), lte: new Date(to) },
         }),
@@ -40,7 +44,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error } = await requireAuth()
+  // Drivers cannot create jobs — only OWNER/OFFICE dispatch
+  const { error } = await requireRole(['OWNER', 'OFFICE'], request)
   if (error) return error
 
   try {

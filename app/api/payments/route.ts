@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
+import { requireAuth, requireRole, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
 import { CreatePaymentSchema } from '@/lib/validations/payment.schema'
 
 export async function GET(request: NextRequest) {
@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error } = await requireAuth()
+  // Drivers don't handle financial records
+  const { error } = await requireRole(['OWNER', 'OFFICE'], request)
   if (error) return error
 
   try {

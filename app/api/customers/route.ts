@@ -1,20 +1,22 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
+import { requireAuth, requireRole, validateBody, validateEnum, handleApiError, successResponse } from '@/lib/api-helpers'
 import { CreateCustomerSchema } from '@/lib/validations/customer.schema'
 
+const CUSTOMER_TYPES = ['RESIDENTIAL', 'COMMERCIAL', 'CONTRACTOR'] as const
+
 export async function GET(request: NextRequest) {
-  const { error } = await requireAuth()
+  const { error } = await requireAuth(request)
   if (error) return error
 
   try {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
-    const type = searchParams.get('type')
+    const type = validateEnum(searchParams.get('type'), CUSTOMER_TYPES)
 
     const customers = await prisma.customer.findMany({
       where: {
-        ...(type && { type: type as any }),
+        ...(type && { type }),
         ...(search && {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error } = await requireAuth()
+  const { error } = await requireRole(['OWNER', 'OFFICE'], request)
   if (error) return error
 
   try {

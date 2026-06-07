@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
+import { requireAuth, requireRole, validateBody, handleApiError, successResponse } from '@/lib/api-helpers'
 import { UpdateInvoiceSchema } from '@/lib/validations/invoice.schema'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -25,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const { error } = await requireAuth()
+  const { error } = await requireRole(['OWNER', 'OFFICE'], request)
   if (error) return error
 
   try {
